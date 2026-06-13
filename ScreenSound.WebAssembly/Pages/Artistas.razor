@@ -1,0 +1,52 @@
+@page "/Artistas"
+@inject ArtistasAPI _artistasAPI;
+
+<h2>Catálogo de Artistas</h2>
+
+@* para cada artista exiba seu nome *@
+
+@if (artistasPorPagina is not null )
+{
+    <div class="grid">
+        @foreach(var artista in artistasPorPagina)
+        {
+            <CardArtista Artista="artista" />
+        }
+    </div>
+
+    <div class="pagination">
+        @for(int i=1; i <= TotalPaginas; i++ )
+        {
+            int paginaAtual = i;
+            <button class="btn m-1" @onclick="() => PaginaMudou(paginaAtual)">@paginaAtual</button>
+        }
+    </div>
+}else
+{
+    <p>Carregando...</p>
+}
+
+@code{
+    private const int TamanhoPagina = 6;
+    private int TotalItens;
+    private int TotalPaginas;
+    private ICollection<ArtistaResponse>? artistas;
+    private ICollection<ArtistaResponse>? artistasPorPagina;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        artistas = await _artistasAPI.GetArtitasAsync();
+        if(artistas is not null){
+            TotalItens = artistas.Count();
+            TotalPaginas = (int)Math.Ceiling((double)TotalItens / TamanhoPagina);
+            PaginaMudou(1);
+        }
+    }
+
+    private void PaginaMudou(int pagina)
+    {
+        var skip = (pagina-1) * TamanhoPagina;
+        artistasPorPagina = artistas!.Skip(skip).Take(TamanhoPagina).ToList();
+    }
+}
